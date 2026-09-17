@@ -1,0 +1,651 @@
+/* ==========================================================================
+   Ledger & Leaf — Expense Tracker
+   Design tokens
+   ========================================================================== */
+
+:root {
+  --bg: #eef0e8;
+  --surface: #ffffff;
+  --surface-tint: #f6f7f1;
+  --ink: #1f2a22;
+  --ink-soft: #55645a;
+  --line: #d9ddce;
+  --line-strong: #b9c0ac;
+
+  --primary: #2f5233;
+  --primary-dark: #1f3823;
+  --primary-tint: #e3ead9;
+
+  --gold: #b8912b;
+  --gold-tint: #f4ecd4;
+
+  --income: #2f6b45;
+  --expense: #a6402a;
+  --expense-tint: #f5e2dc;
+  --income-tint: #e2ede4;
+
+  --radius-s: 4px;
+  --radius-m: 8px;
+
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+
+  --shadow-card: 0 1px 2px rgba(31, 42, 34, 0.06), 0 1px 0 rgba(31, 42, 34, 0.04);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------
+   Layout shell
+   -------------------------------------------------------------------- */
+
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+/* --------------------------------------------------------------------
+   Header / nav
+   -------------------------------------------------------------------- */
+
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.site-header .wrap {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.site-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.site-nav a {
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-s);
+  font-size: 14px;
+  color: var(--ink-soft);
+  border: 1px solid transparent;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+}
+
+.site-nav a.active {
+  color: var(--primary-dark);
+  background: var(--primary-tint);
+  border-color: var(--primary-tint);
+}
+
+/* --------------------------------------------------------------------
+   Hero / balance summary
+   -------------------------------------------------------------------- */
+
+.hero {
+  padding: 40px 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero-label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+
+.hero-balance {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(40px, 8vw, 64px);
+  margin: 0;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-balance.is-negative {
+  color: var(--expense);
+}
+
+.hero-stats {
+  display: flex;
+  gap: 28px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.hero-stat {
+  min-width: 140px;
+}
+
+.hero-stat-label {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0 0 4px;
+}
+
+.hero-stat-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-stat-value.income {
+  color: var(--income);
+}
+
+.hero-stat-value.expense {
+  color: var(--expense);
+}
+
+/* --------------------------------------------------------------------
+   Panels / cards
+   -------------------------------------------------------------------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+}
+
+.panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.panel-body {
+  padding: 20px;
+}
+
+.section {
+  margin-top: 28px;
+}
+
+/* --------------------------------------------------------------------
+   Form
+   -------------------------------------------------------------------- */
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field.span-2 {
+  grid-column: span 2;
+}
+
+.field.span-3 {
+  grid-column: span 3;
+}
+
+.field.span-6 {
+  grid-column: span 6;
+}
+
+.field label {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.field input,
+.field select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--primary);
+}
+
+.type-toggle {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  overflow: hidden;
+}
+
+.type-toggle button {
+  flex: 1;
+  border: none;
+  background: var(--surface);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.type-toggle button + button {
+  border-left: 1px solid var(--line-strong);
+}
+
+.type-toggle button.active[data-type="expense"] {
+  background: var(--expense-tint);
+  color: var(--expense);
+}
+
+.type-toggle button.active[data-type="income"] {
+  background: var(--income-tint);
+  color: var(--income);
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* --------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------- */
+
+.btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: var(--radius-s);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+
+.btn-ghost:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-soft);
+  padding: 6px 8px;
+  border-radius: var(--radius-s);
+  font-size: 13px;
+}
+
+.btn-icon:hover {
+  background: var(--surface-tint);
+  color: var(--ink);
+}
+
+.btn-icon.danger:hover {
+  color: var(--expense);
+}
+
+/* --------------------------------------------------------------------
+   Filters
+   -------------------------------------------------------------------- */
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-tint);
+}
+
+.filters input,
+.filters select {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------------
+   Ledger table
+   -------------------------------------------------------------------- */
+
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger thead th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger thead th.num {
+  text-align: right;
+}
+
+.ledger tbody tr {
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ledger tbody tr:hover {
+  background: var(--surface-tint);
+}
+
+.ledger td {
+  padding: 14px 20px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.ledger td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ledger td.num.income {
+  color: var(--income);
+}
+
+.ledger td.num.expense {
+  color: var(--expense);
+}
+
+.ledger .row-desc {
+  font-weight: 500;
+}
+
+.ledger .row-date {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--gold-tint);
+  color: var(--gold);
+  border: 1px solid transparent;
+}
+
+.row-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* --------------------------------------------------------------------
+   Empty state
+   -------------------------------------------------------------------- */
+
+.empty-state {
+  padding: 56px 20px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.empty-state p {
+  margin: 0 0 4px;
+}
+
+.empty-state .empty-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+/* --------------------------------------------------------------------
+   Toasts
+   -------------------------------------------------------------------- */
+
+.toast-stack {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 40;
+}
+
+.toast {
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: var(--radius-s);
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  min-width: 220px;
+  animation: toast-in 160ms ease-out;
+}
+
+.toast.error {
+  background: var(--expense);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------
+   Reports page
+   -------------------------------------------------------------------- */
+
+.report-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legend-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.legend-list li:last-child {
+  border-bottom: none;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 8px;
+}
+
+.legend-name {
+  display: flex;
+  align-items: center;
+}
+
+.legend-value {
+  font-family: var(--font-mono);
+  color: var(--ink-soft);
+}
+
+.chart-canvas-wrap {
+  position: relative;
+  height: 300px;
+}
+
+/* --------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------- */
+
+.site-footer {
+  padding: 24px 0 40px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* --------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .field-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .field.span-2,
+  .field.span-3,
+  .field.span-6 {
+    grid-column: span 2;
+  }
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-stats {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrap {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}

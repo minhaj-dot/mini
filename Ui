@@ -1,0 +1,71 @@
+/**
+ * ui.js
+ * ---------------------------------------------------------------------
+ * Small, shared UI helpers with no dependency on storage.js, so both
+ * pages can load it independently.
+ * ---------------------------------------------------------------------
+ */
+
+const CATEGORIES = [
+  "Food",
+  "Transport",
+  "Housing",
+  "Utilities",
+  "Entertainment",
+  "Health",
+  "Shopping",
+  "Education",
+  "Salary",
+  "Freelance",
+  "Other",
+];
+
+/** Format a number as PKR currency, e.g. 1234.5 -> "Rs 1,234.50" */
+function formatCurrency(amount) {
+  const value = Number(amount) || 0;
+  const formatted = value.toLocaleString("en-PK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return "Rs " + formatted;
+}
+
+/** Format an ISO date string ("2026-09-16") as "16 Sep 2026". */
+function formatDate(isoDate) {
+  const d = new Date(isoDate + "T00:00:00");
+  if (isNaN(d.getTime())) return isoDate;
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** Show a small toast message in the bottom-right corner. */
+function showToast(message, variant) {
+  let stack = document.querySelector(".toast-stack");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.className = "toast-stack";
+    document.body.appendChild(stack);
+  }
+  const toast = document.createElement("div");
+  toast.className = "toast" + (variant === "error" ? " error" : "");
+  toast.textContent = message;
+  stack.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 3200);
+}
+
+/** Mark the current page's nav link as active based on data-page. */
+function markActiveNavLink() {
+  const current = document.body.getAttribute("data-page");
+  document.querySelectorAll(".site-nav a[data-page]").forEach((link) => {
+    if (link.getAttribute("data-page") === current) {
+      link.classList.add("active");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", markActiveNavLink);

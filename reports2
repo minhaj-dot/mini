@@ -1,0 +1,147 @@
+/**
+ * reports.js
+ * ---------------------------------------------------------------------
+ * Logic for pages/reports.html. Depends on storage.js, ui.js, and the
+ * globally loaded Chart.js UMD build, all included before this file.
+ * ---------------------------------------------------------------------
+ */
+
+const CHART_PALETTE = [
+  "#2f5233", // pine
+  "#b8912b", // gold
+  "#a6402a", // rust
+  "#3d6b7a", // slate teal
+  "#7a5c3d", // walnut
+  "#5c7a3d", // olive
+  "#7a3d5c", // plum
+  "#3d5c7a", // steel blue
+  "#8a6d1f", // bronze
+  "#4f6b4a", // moss
+  "#8a4a2f", // clay
+];
+
+function buildCategoryReport() {
+  const expenses = getTransactions().filter((t) => t.type === "expense");
+  const grid = document.getElementById("category-report-grid");
+  const emptyState = document.getElementById("category-empty");
+
+  if (expenses.length === 0) {
+    grid.style.display = "none";
+    emptyState.style.display = "block";
+    return;
+  }
+  grid.style.display = "grid";
+  emptyState.style.display = "none";
+
+  const totalsByCategory = {};
+  expenses.forEach((t) => {
+    totalsByCategory[t.category] = (totalsByCategory[t.category] || 0) + t.amount;
+  });
+
+  const labels = Object.keys(totalsByCategory);
+  const values = labels.map((l) => totalsByCategory[l]);
+  const colors = labels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]);
+  const grandTotal = values.reduce((sum, v) => sum + v, 0);
+
+  new Chart(document.getElementById("category-chart"), {
+    type: "doughnut",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: colors,
+          borderColor: "#ffffff",
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      cutout: "62%",
+    },
+  });
+
+  const legend = document.getElementById("category-legend");
+  legend.innerHTML = "";
+  labels
+    .map((label, i) => ({ label, value: totalsByCategory[label], color: colors[i] }))
+    .sort((a, b) => b.value - a.value)
+    .forEach((entry) => {
+      const li = document.createElement("li");
+      const share = grandTotal ? Math.round((entry.value / grandTotal) * 100) : 0;
+      li.innerHTML =
+        '<span class="legend-name"><span class="legend-swatch" style="background:' +
+        entry.color +
+        '"></span>' +
+        entry.label +
+        "</span>" +
+        '<span class="legend-value">' +
+        formatCurrency(entry.value) +
+        " · " +
+        share +
+        "%</span>";
+      legend.appendChild(li);
+    });
+}
+
+function buildMonthlyReport() {
+  const transactions = getTransactions();
+  const wrap = document.getElementById("monthly-chart-wrap");
+  const emptyState = document.getElementById("monthly-empty");
+
+  if (transactions.length === 0) {
+    wrap.style.display = "none";
+    emptyState.style.display = "block";
+    return;
+  }
+  wrap.style.display = "block";
+  emptyState.style.display = "none";
+
+  const monthlyTotals = {}; // "2026-09" -> { income: 0, expense: 0 }
+  transactions.forEach((t) => {
+    const monthKey = t.date.slice(0, 7);
+    if (!monthlyTotals[monthKey]) monthlyTotals[monthKey] = { income: 0, expense: 0 };
+    monthlyTotals[monthKey][t.type] += t.amount;
+  });
+
+  const months = Object.keys(monthlyTotals).sort();
+  const monthLabels = months.map((m) => {
+    const d = new Date(m + "-01T00:00:00");
+    return d.toLocaleDateString("en-GB", { month: "short", year: "2-digit" });
+  });
+
+  new Chart(document.getElementById("monthly-chart"), {
+    type: "bar",
+    data: {
+      labels: monthLabels,
+      datasets: [
+        {
+          label: "Income",
+          data: months.map((m) => monthlyTotals[m].income),
+          backgroundColor: "#2f6b45",
+          borderRadius: 3,
+        },
+        {
+          label: "Expenses",
+          data: months.map((m) => monthlyTotals[m].expense),
+          backgroundColor: "#a6402a",
+          borderRadius: 3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true },
+      },
+      plugins: {
+        legend: { position: "bottom" },
+      },
+    },
+  });
+}
+
+buildCategoryReport();
+buildMonthlyReport();

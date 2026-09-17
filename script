@@ -1,0 +1,264 @@
+/**
+ * script.js
+ * ---------------------------------------------------------------------
+ * Logic for index.html (the dashboard). Depends on storage.js and
+ * ui.js, both loaded before this file.
+ * ---------------------------------------------------------------------
+ */
+
+// ---- Element references -------------------------------------------------
+const form = document.getElementById("transaction-form");
+const idField = document.getElementById("transaction-id");
+const typeField = document.getElementById("type");
+const amountField = document.getElementById("amount");
+const dateField = document.getElementById("date");
+const descriptionField = document.getElementById("description");
+const categoryField = document.getElementById("category");
+
+const typeToggleGroup = document.getElementById("type-toggle-group");
+const formTitle = document.getElementById("form-title");
+const submitBtn = document.getElementById("submit-btn");
+const cancelEditBtn = document.getElementById("cancel-edit-btn");
+
+const searchInput = document.getElementById("search-input");
+const filterType = document.getElementById("filter-type");
+const filterCategory = document.getElementById("filter-category");
+const sortBy = document.getElementById("sort-by");
+
+const ledgerBody = document.getElementById("ledger-body");
+const emptyState = document.getElementById("empty-state");
+
+const balanceFigure = document.getElementById("balance-figure");
+const totalIncomeEl = document.getElementById("total-income");
+const totalExpenseEl = document.getElementById("total-expense");
+const totalCountEl = document.getElementById("total-count");
+
+// ---- Setup ---------------------------------------------------------------
+
+function populateCategoryOptions() {
+  categoryField.innerHTML = "";
+  filterCategory.querySelectorAll("option:not(:first-child)").forEach((o) => o.remove());
+
+  CATEGORIES.forEach((cat) => {
+    const opt1 = document.createElement("option");
+    opt1.value = cat;
+    opt1.textContent = cat;
+    categoryField.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = cat;
+    opt2.textContent = cat;
+    filterCategory.appendChild(opt2);
+  });
+}
+
+function setTodayAsDefaultDate() {
+  const today = new Date().toISOString().slice(0, 10);
+  dateField.value = today;
+}
+
+function setActiveType(type) {
+  typeField.value = type;
+  typeToggleGroup.querySelectorAll("button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.type === type);
+  });
+}
+
+typeToggleGroup.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-type]");
+  if (!btn) return;
+  setActiveType(btn.dataset.type);
+});
+
+// ---- Validation ------------------------------------------------------
+
+function clearFieldErrors() {
+  ["amount", "date", "description"].forEach((name) => {
+    const el = document.getElementById(name + "-error");
+    if (el) el.textContent = "";
+  });
+}
+
+function validateForm() {
+  clearFieldErrors();
+  let valid = true;
+
+  const amount = Number(amountField.value);
+  if (!amountField.value || isNaN(amount) || amount <= 0) {
+    document.getElementById("amount-error").textContent = "Enter an amount greater than 0.";
+    valid = false;
+  }
+
+  if (!dateField.value) {
+    document.getElementById("date-error").textContent = "Pick a date.";
+    valid = false;
+  }
+
+  if (!descriptionField.value.trim()) {
+    document.getElementById("description-error").textContent = "Description can't be empty.";
+    valid = false;
+  }
+
+  return valid;
+}
+
+// ---- Form submit (add or update) -----------------------------------
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
+
+  const data = {
+    type: typeField.value,
+    amount: amountField.value,
+    date: dateField.value,
+    description: descriptionField.value,
+    category: categoryField.value,
+  };
+
+  const editingId = idField.value;
+
+  if (editingId) {
+    updateTransaction(editingId, data);
+    showToast("Transaction updated.");
+  } else {
+    addTransaction(data);
+    showToast("Transaction added.");
+  }
+
+  exitEditMode();
+  renderLedger();
+});
+
+function enterEditMode(transaction) {
+  idField.value = transaction.id;
+  setActiveType(transaction.type);
+  amountField.value = transaction.amount;
+  dateField.value = transaction.date;
+  descriptionField.value = transaction.description;
+  categoryField.value = transaction.category;
+
+  formTitle.textContent = "Edit transaction";
+  submitBtn.textContent = "Save changes";
+  cancelEditBtn.style.display = "inline-block";
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function exitEditMode() {
+  idField.value = "";
+  form.reset();
+  setActiveType("expense");
+  setTodayAsDefaultDate();
+  formTitle.textContent = "Add a transaction";
+  submitBtn.textContent = "Add transaction";
+  cancelEditBtn.style.display = "none";
+  clearFieldErrors();
+}
+
+cancelEditBtn.addEventListener("click", exitEditMode);
+
+// ---- Delete ------------------------------------------------------------
+
+function handleDelete(id, description) {
+  const confirmed = window.confirm('Delete "' + description + '"? This cannot be undone.');
+  if (!confirmed) return;
+  deleteTransaction(id);
+  showToast("Transaction deleted.");
+  if (idField.value === id) exitEditMode();
+  renderLedger();
+}
+
+// ---- Filters / search / sort --------------------------------------------
+
+[searchInput, filterType, filterCategory, sortBy].forEach((el) => {
+  el.addEventListener("input", renderLedger);
+  el.addEventListener("change", renderLedger);
+});
+
+function getVisibleTransactions() {
+  let transactions = getTransactions();
+
+  const query = searchInput.value.trim().toLowerCase();
+  if (query) {
+    transactions = transactions.filter((t) => t.description.toLowerCase().includes(query));
+  }
+
+  if (filterType.value !== "all") {
+    transactions = transactions.filter((t) => t.type === filterType.value);
+  }
+
+  if (filterCategory.value !== "all") {
+    transactions = transactions.filter((t) => t.category === filterCategory.value);
+  }
+
+  const [key, direction] = sortBy.value.split("-");
+  transactions.sort((a, b) => {
+    let comparison = 0;
+    if (key === "date") {
+      comparison = a.date.localeCompare(b.date);
+    } else if (key === "amount") {
+      comparison = a.amount - b.amount;
+    }
+    return direction === "asc" ? comparison : -comparison;
+  });
+
+  return transactions;
+}
+
+// ---- Rendering -----------------------------------------------------------
+
+function renderLedger() {
+  const visible = getVisibleTransactions();
+  ledgerBody.innerHTML = "";
+
+  emptyState.style.display = visible.length === 0 ? "block" : "none";
+  document.getElementById("ledger-table").style.display = visible.length === 0 ? "none" : "table";
+
+  visible.forEach((t) => {
+    const row = document.createElement("tr");
+
+    const sign = t.type === "expense" ? "-" : "+";
+    const amountClass = t.type === "expense" ? "expense" : "income";
+
+    row.innerHTML =
+      '<td><div class="row-desc"></div></td>' +
+      '<td><span class="tag"></span></td>' +
+      '<td class="row-date-cell"></td>' +
+      '<td class="num ' + amountClass + '"></td>' +
+      '<td class="num"><div class="row-actions">' +
+      '<button type="button" class="btn-icon edit-btn" aria-label="Edit">Edit</button>' +
+      '<button type="button" class="btn-icon danger delete-btn" aria-label="Delete">Delete</button>' +
+      "</div></td>";
+
+    row.querySelector(".row-desc").textContent = t.description;
+    row.querySelector(".tag").textContent = t.category;
+    row.querySelector(".row-date-cell").textContent = formatDate(t.date);
+    row.querySelector(".num." + amountClass).textContent = sign + " " + formatCurrency(t.amount);
+
+    row.querySelector(".edit-btn").addEventListener("click", () => enterEditMode(t));
+    row.querySelector(".delete-btn").addEventListener("click", () => handleDelete(t.id, t.description));
+
+    ledgerBody.appendChild(row);
+  });
+
+  renderSummary();
+}
+
+function renderSummary() {
+  const all = getTransactions();
+  const income = all.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+  const expense = all.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+  const balance = income - expense;
+
+  balanceFigure.textContent = formatCurrency(balance);
+  balanceFigure.classList.toggle("is-negative", balance < 0);
+  totalIncomeEl.textContent = formatCurrency(income);
+  totalExpenseEl.textContent = formatCurrency(expense);
+  totalCountEl.textContent = all.length;
+}
+
+// ---- Init ------------------------------------------------------------
+
+populateCategoryOptions();
+setTodayAsDefaultDate();
+renderLedger();

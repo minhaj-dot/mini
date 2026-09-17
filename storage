@@ -1,0 +1,94 @@
+/**
+ * storage.js
+ * ---------------------------------------------------------------------
+ * All Local Storage read/write logic for the expense tracker lives here.
+ * Every transaction is stored as a plain object:
+ *   {
+ *     id: string,          // unique id, generated at creation time
+ *     type: "income" | "expense",
+ *     description: string,
+ *     amount: number,      // always positive; sign is derived from type
+ *     category: string,
+ *     date: string          // ISO date, e.g. "2026-09-16"
+ *   }
+ * The full array is stored under STORAGE_KEY as a single JSON string.
+ * ---------------------------------------------------------------------
+ */
+
+const STORAGE_KEY = "ledgerLeaf.transactions.v1";
+
+/** Read all transactions from Local Storage. Returns [] if none exist yet. */
+function getTransactions() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error("Could not read transactions from Local Storage:", err);
+    return [];
+  }
+}
+
+/** Overwrite the full transactions array in Local Storage. */
+function saveTransactions(transactions) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    return true;
+  } catch (err) {
+    console.error("Could not save transactions to Local Storage:", err);
+    return false;
+  }
+}
+
+/** Generate a reasonably unique id without any external library. */
+function generateId() {
+  return "t_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+}
+
+/** Add a new transaction and persist it. Returns the created record. */
+function addTransaction(data) {
+  const transactions = getTransactions();
+  const record = {
+    id: generateId(),
+    type: data.type,
+    description: data.description.trim(),
+    amount: Number(data.amount),
+    category: data.category,
+    date: data.date,
+  };
+  transactions.push(record);
+  saveTransactions(transactions);
+  return record;
+}
+
+/** Update an existing transaction by id. Returns true if a record was found. */
+function updateTransaction(id, data) {
+  const transactions = getTransactions();
+  const index = transactions.findIndex((t) => t.id === id);
+  if (index === -1) return false;
+  transactions[index] = {
+    ...transactions[index],
+    type: data.type,
+    description: data.description.trim(),
+    amount: Number(data.amount),
+    category: data.category,
+    date: data.date,
+  };
+  saveTransactions(transactions);
+  return true;
+}
+
+/** Delete a transaction by id. Returns true if a record was removed. */
+function deleteTransaction(id) {
+  const transactions = getTransactions();
+  const next = transactions.filter((t) => t.id !== id);
+  const changed = next.length !== transactions.length;
+  if (changed) saveTransactions(next);
+  return changed;
+}
+
+/** Look up a single transaction by id. */
+function getTransactionById(id) {
+  return getTransactions().find((t) => t.id === id) || null;
+}
